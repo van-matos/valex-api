@@ -1,6 +1,8 @@
 import * as cardMethods from "../repositories/cardRepository";
 import * as companyMethods from "../repositories/companyRepository";
-import * as employeeMethods from "../repositories/employeeRepository"
+import * as employeeMethods from "../repositories/employeeRepository";
+import * as paymentMethods from "../repositories/paymentRepository";
+import * as rechargeMethods from "../repositories/rechargeRepository";
 import * as cardUtils from "../utils/cardUtils";
 import * as errorUtils from "../utils/errorUtils";
 
@@ -75,4 +77,23 @@ export async function createNewCard(
     }
 
     return cardInfo;
+}
+
+export async function getCardStatement(cardId: number) {
+    const card = await cardMethods.findById(cardId);
+    
+    if (!card) throw errorUtils.notFound("card");
+
+    const recharges = await rechargeMethods.findByCardId(cardId);    
+    const transactions = await paymentMethods.findByCardId(cardId);
+
+    const balance = await cardUtils.calculateBalance(recharges, transactions);
+
+    const cardStatement = {
+        balance,
+        transactions,
+        recharges
+    };
+
+    return cardStatement;
 }

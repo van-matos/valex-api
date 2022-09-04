@@ -6,8 +6,10 @@ import * as cardSchema from "../schemas/cardSchema";
 
 const cardRouter = Router();
 
-cardRouter.post("/cards/:id", validateSchema(cardSchema.typeSchema), cardController.addNewCard);
+cardRouter.get("/balance/:cardId", cardController.getCardStatement);
 
-cardRouter.patch("/activation/:id", validateSchema(cardSchema.activationSchema), cardController.activateCard);
+cardRouter.post("/cards/:employeeId", validateSchema(cardSchema.typeSchema), cardController.addNewCard);
+
+cardRouter.patch("/activation/:cardId", validateSchema(cardSchema.activationSchema), cardController.activateCard);
 
 export default cardRouter;

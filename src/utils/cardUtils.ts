@@ -3,7 +3,22 @@ import Cryptr from "cryptr";
 import dayjs from 'dayjs';
 import { faker } from '@faker-js/faker';
 
+export async function calculateBalance(recharges: any[], payments: any[]) {
+    const rechargesTotal = calculateAmount(recharges);
+    const paymentsTotal = calculateAmount(payments);
 
+    function calculateAmount(transactions: any[]) {
+        const transactionsTotal = transactions.map(
+            (transaction: { amount: number}) => transaction.amount
+        );
+        
+        if (transactions.length === 0) return 0;
+
+        return transactionsTotal.reduce((total, current) => total + current);
+    }
+
+    return rechargesTotal - paymentsTotal;
+}
 
 export function decryptSecurityCode(cryptr: Cryptr, dbSecurityCode: string) {
     const decryptedSecrityCode = cryptr.decrypt(dbSecurityCode);
@@ -70,6 +85,3 @@ export function verifyPassword(password: string) {
 
     return passwordRGX.test(password);
 }
-
-
-
