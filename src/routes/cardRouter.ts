@@ -12,5 +12,6 @@ cardRouter.post("/cards/:employeeId", validateSchema(cardSchema.typeSchema), car
 
 cardRouter.patch("/activate/:cardId", validateSchema(cardSchema.activateSchema), cardController.activateCard);
 cardRouter.patch("/block/:cardId", validateSchema(cardSchema.blockSchema), cardController.blockCard);
+cardRouter.patch("/unblock/:cardId", validateSchema(cardSchema.blockSchema), cardController.unblockCard);
 
 export default cardRouter;

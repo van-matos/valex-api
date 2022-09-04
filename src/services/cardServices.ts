@@ -110,3 +110,22 @@ export async function blockCard(cardId: number, password: string) {
     await cardRepository.update(cardId, cardData);
     return;
 }
+
+export async function unblockCard(cardId: number, password: string) {
+    const card = await cardRepository.findById(cardId);
+
+    if (!card) throw { status: 404, message: "Card not found" };
+
+    if (cardUtils.verifyExpiration(card.expirationDate)) throw { status: 403, message: "Card expired" };
+
+    if (!cardUtils.comparePasswords(card.password || "", password)) throw { status: 401, message: "Access denied" };
+    
+    if (!card.isBlocked) throw { status: 403, message: "Card already unblocked" };
+
+    const cardData = {
+        isBlocked: false,
+    };
+
+    await cardRepository.update(cardId, cardData);
+    return;
+}
