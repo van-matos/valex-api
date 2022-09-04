@@ -1,4 +1,4 @@
-import { hashSync } from "bcrypt";
+import bcrypt from "bcrypt";
 import Cryptr from "cryptr";
 import dayjs from 'dayjs';
 import { faker } from '@faker-js/faker';
@@ -20,6 +20,10 @@ export async function calculateBalance(recharges: any[], payments: any[]) {
     return rechargesTotal - paymentsTotal;
 }
 
+export function comparePasswords(cardPassword: string , password: string) {
+    return bcrypt.compareSync(password, cardPassword);
+}
+
 export function decryptSecurityCode(cryptr: Cryptr, dbSecurityCode: string) {
     const decryptedSecrityCode = cryptr.decrypt(dbSecurityCode);
 
@@ -34,7 +38,7 @@ export function encrypter() {
 }
 
 export function encryptPassword(password: string) {
-    const encryptedPassword = hashSync(password, 10);
+    const encryptedPassword = bcrypt.hashSync(password, 10);
 
     return encryptedPassword;
 }

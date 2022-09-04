@@ -1,32 +1,29 @@
-import * as cardMethods from "../repositories/cardRepository";
-import * as companyMethods from "../repositories/companyRepository";
-import * as employeeMethods from "../repositories/employeeRepository";
-import * as paymentMethods from "../repositories/paymentRepository";
-import * as rechargeMethods from "../repositories/rechargeRepository";
+import * as cardRepository from "../repositories/cardRepository";
+import * as companyRepository from "../repositories/companyRepository";
+import * as employeeRepository from "../repositories/employeeRepository";
+import * as paymentRepository from "../repositories/paymentRepository";
+import * as rechargeRepository from "../repositories/rechargeRepository";
 import * as cardUtils from "../utils/cardUtils";
-import * as errorUtils from "../utils/errorUtils";
 
 export async function activateCard(
     cardId: number,
     password: string,
     securityCode: string
 ) {
-    const card = await cardMethods.findById(cardId);
+    const card = await cardRepository.findById(cardId);
 
-    if (!card)
-        throw errorUtils.notFound("card");
+    if (!card) throw { status: 404, message: "Card not found" };
 
-    if (cardUtils.verifyExpiration(card.expirationDate))
-        throw errorUtils.expiredCard();
+    if (cardUtils.verifyExpiration(card.expirationDate)) throw { status: 403, message: "Card expired" };
 
     if (card.password)
-        throw errorUtils.cardActivated();
+    throw { status: 403, message: "Card already activated" };
 
     if (cardUtils.decryptSecurityCode(cardUtils.encrypter(), card.securityCode) !== securityCode)
-        throw errorUtils.invalidSecurityCode();
+        throw { status: 401, message: "Access denied" };
 
     if (!cardUtils.verifyPassword(password))
-        throw errorUtils.invalidPassword();
+        throw { status: 405, message: "Invalid password" };
 
     const encryptedPassword = cardUtils.encryptPassword(password);
 
@@ -35,29 +32,26 @@ export async function activateCard(
         isBlocked: false
     }
 
-    await cardMethods.update(cardId, cardData);
+    await cardRepository.update(cardId, cardData);
 }
 
 export async function createNewCard(
     APIKey: any,
-    cardType: cardMethods.TransactionTypes,
+    cardType: cardRepository.TransactionTypes,
     employeeId: number
 ) {
-    const verifyKey = await companyMethods.findByApiKey(APIKey);
-    if (!verifyKey)
-        throw errorUtils.unauthorizedCompany();
+    const verifyKey = await companyRepository.findByApiKey(APIKey);
+    if (!verifyKey) throw { status: 401, message: "Company not registered" };
 
-    const verifyEmployee = await employeeMethods.findById(employeeId);
-    if (!verifyEmployee)
-        throw errorUtils.notFound("employee");
+    const verifyEmployee = await employeeRepository.findById(employeeId);
+    if (!verifyEmployee) throw { status: 401, message: "Employee not registered" };
 
-    const verifyCard = await cardMethods.findByTypeAndEmployeeId(cardType, employeeId);
-    if (verifyCard)
-        throw errorUtils.duplicateCardType(cardType);
+    const verifyCard = await cardRepository.findByTypeAndEmployeeId(cardType, employeeId);
+    if (verifyCard) throw { status: 405, message: "Employee already has card of this type"};
 
     const securityCode = cardUtils.generateSecurityCode();
 
-    const cardData: cardMethods.CardInsertData = {
+    const cardData: cardRepository.CardInsertData = {
         employeeId,
         number: cardUtils.generateCardNumber(),
         cardholderName: cardUtils.formatCardName(verifyEmployee.fullName),
@@ -69,7 +63,7 @@ export async function createNewCard(
         type: cardType
     };
 
-    await cardMethods.insert(cardData)
+    await cardRepository.insert(cardData)
 
     const cardInfo = {
         number: cardData.number,
@@ -80,12 +74,12 @@ export async function createNewCard(
 }
 
 export async function getCardStatement(cardId: number) {
-    const card = await cardMethods.findById(cardId);
+    const card = await cardRepository.findById(cardId);
     
-    if (!card) throw errorUtils.notFound("card");
+    if (!card) throw { status: 404, message: "Card not found" };
 
-    const recharges = await rechargeMethods.findByCardId(cardId);    
-    const transactions = await paymentMethods.findByCardId(cardId);
+    const recharges = await rechargeRepository.findByCardId(cardId);    
+    const transactions = await paymentRepository.findByCardId(cardId);
 
     const balance = await cardUtils.calculateBalance(recharges, transactions);
 
@@ -96,4 +90,23 @@ export async function getCardStatement(cardId: number) {
     };
 
     return cardStatement;
+}
+
+export async function blockCard(cardId: number, password: string) {
+    const card = await cardRepository.findById(cardId);
+
+    if (!card) throw { status: 404, message: "Card not found" };
+
+    if (cardUtils.verifyExpiration(card.expirationDate)) throw { status: 403, message: "Card expired" };
+
+    if (!cardUtils.comparePasswords(card.password || "", password)) throw { status: 401, message: "Access denied" };
+    
+    if (card.isBlocked) throw { status: 403, message: "Card already blocked" };
+
+    const cardData = {
+        isBlocked: true,
+    };
+
+    await cardRepository.update(cardId, cardData);
+    return;
 }

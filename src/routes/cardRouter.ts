@@ -10,6 +10,7 @@ cardRouter.get("/balance/:cardId", cardController.getCardStatement);
 
 cardRouter.post("/cards/:employeeId", validateSchema(cardSchema.typeSchema), cardController.addNewCard);
 
-cardRouter.patch("/activation/:cardId", validateSchema(cardSchema.activationSchema), cardController.activateCard);
+cardRouter.patch("/activate/:cardId", validateSchema(cardSchema.activateSchema), cardController.activateCard);
+cardRouter.patch("/block/:cardId", validateSchema(cardSchema.blockSchema), cardController.blockCard);
 
 export default cardRouter;

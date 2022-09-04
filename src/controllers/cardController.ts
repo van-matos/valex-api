@@ -28,3 +28,12 @@ export async function getCardStatement(req: Request, res: Response) {
 
     res. status(200).send(cardStatement);
 }
+
+export async function blockCard(req: Request, res: Response) {
+    const cardId: number = Number(req.params.cardId);
+    const { password } = req.body;
+
+    await cardServices.blockCard(cardId, password);
+
+    return res.sendStatus(200);
+}

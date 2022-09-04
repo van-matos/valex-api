@@ -1,6 +1,6 @@
 import joi, { ObjectSchema} from "joi";
 
-export const activationSchema: ObjectSchema = joi.object({
+export const activateSchema: ObjectSchema = joi.object({
     securityCode: joi.string()
         .trim()
         .required()
@@ -8,7 +8,11 @@ export const activationSchema: ObjectSchema = joi.object({
     password: joi.string()
         .trim()
         .required(),
-}) 
+});
+
+export const blockSchema = joi.object({
+    password: joi.string().required(),
+});
 
 export const typeSchema: ObjectSchema = joi.object({
     type: joi.string()
@@ -19,4 +23,4 @@ export const typeSchema: ObjectSchema = joi.object({
             "education",
             "health")
         .required()
-})
+});
