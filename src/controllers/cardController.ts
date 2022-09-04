@@ -8,7 +8,7 @@ export async function activateCard(req: Request, res: Response) {
 
     await cardServices.activateCard(cardId, password, securityCode);
 
-    res.status(200).send("Card activated.");
+    res.status(200).send("Card activated");
 }
 
 export async function addNewCard(req: Request, res: Response) {
@@ -18,7 +18,7 @@ export async function addNewCard(req: Request, res: Response) {
 
     const cardInfo = await cardServices.createNewCard(APIKey, cardType, employeeId);
 
-    res.status(201).send({cardInfo});
+    res.status(201).send(cardInfo);
 }
 
 export async function getCardStatement(req: Request, res: Response) {
@@ -35,7 +35,7 @@ export async function blockCard(req: Request, res: Response) {
 
     await cardServices.blockCard(cardId, password);
 
-    return res.sendStatus(200);
+    return res.status(200).send("Card blocked");
 }
 
 export async function unblockCard(req: Request, res: Response) {
@@ -44,5 +44,5 @@ export async function unblockCard(req: Request, res: Response) {
 
     await cardServices.unblockCard(cardId, password);
 
-    return res.sendStatus(200);
+    return res.status(200).send("Card unblocked");
 }

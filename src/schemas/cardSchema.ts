@@ -10,7 +10,7 @@ export const activateSchema: ObjectSchema = joi.object({
         .required(),
 });
 
-export const blockSchema = joi.object({
+export const blockSchema: ObjectSchema = joi.object({
     password: joi.string().required(),
 });
 

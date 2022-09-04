@@ -12,12 +12,14 @@ export async function activateCard(
 ) {
     const card = await cardRepository.findById(cardId);
 
-    if (!card) throw { status: 404, message: "Card not found" };
+    if (!card) 
+        throw { status: 404, message: "Card not found" };
 
-    if (cardUtils.verifyExpiration(card.expirationDate)) throw { status: 403, message: "Card expired" };
+    if (cardUtils.verifyExpiration(card.expirationDate)) 
+        throw { status: 403, message: "Card expired" };
 
     if (card.password)
-    throw { status: 403, message: "Card already activated" };
+        throw { status: 403, message: "Card already activated" };
 
     if (cardUtils.decryptSecurityCode(cardUtils.encrypter(), card.securityCode) !== securityCode)
         throw { status: 401, message: "Access denied" };
@@ -41,13 +43,17 @@ export async function createNewCard(
     employeeId: number
 ) {
     const verifyKey = await companyRepository.findByApiKey(APIKey);
-    if (!verifyKey) throw { status: 401, message: "Company not registered" };
-
-    const verifyEmployee = await employeeRepository.findById(employeeId);
-    if (!verifyEmployee) throw { status: 401, message: "Employee not registered" };
-
     const verifyCard = await cardRepository.findByTypeAndEmployeeId(cardType, employeeId);
-    if (verifyCard) throw { status: 405, message: "Employee already has card of this type"};
+    const verifyEmployee = await employeeRepository.findById(employeeId);
+
+    if (!verifyKey)
+        throw { status: 401, message: "Company not registered" };
+
+    if (!verifyEmployee)
+        throw { status: 401, message: "Employee not registered" };
+
+    if (verifyCard)
+        throw { status: 405, message: "Employee already has card of this type"};
 
     const securityCode = cardUtils.generateSecurityCode();
 
@@ -75,7 +81,7 @@ export async function createNewCard(
 
 export async function getCardStatement(cardId: number) {
     const card = await cardRepository.findById(cardId);
-    
+
     if (!card) throw { status: 404, message: "Card not found" };
 
     const recharges = await rechargeRepository.findByCardId(cardId);    
@@ -108,6 +114,7 @@ export async function blockCard(cardId: number, password: string) {
     };
 
     await cardRepository.update(cardId, cardData);
+
     return;
 }
 
@@ -127,5 +134,6 @@ export async function unblockCard(cardId: number, password: string) {
     };
 
     await cardRepository.update(cardId, cardData);
+    
     return;
 }
