@@ -1,6 +1,16 @@
-import joi from "joi";
+import joi, { ObjectSchema} from "joi";
 
-export const typeValidation = joi.object({
+export const activationSchema: ObjectSchema = joi.object({
+    securityCode: joi.string()
+        .trim()
+        .required()
+        .pattern(/^[0-9]{3}$/),
+    password: joi.string()
+        .trim()
+        .required(),
+}) 
+
+export const typeSchema: ObjectSchema = joi.object({
     type: joi.string()
         .valid(
             "groceries",

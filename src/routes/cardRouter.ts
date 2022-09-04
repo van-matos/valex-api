@@ -1,11 +1,13 @@
 import { Router } from "express";
 
-import { addNewCard } from "../controllers/cardController";
+import * as cardController from "../controllers/cardController";
 import { validateSchema } from "../middlewares/validateSchema";
-import { typeValidation } from "../schemas/cardSchema";
+import * as cardSchema from "../schemas/cardSchema";
 
 const cardRouter = Router();
 
-cardRouter.post('/create-card/:id', validateSchema(typeValidation), addNewCard);
+cardRouter.post("/cards/:id", validateSchema(cardSchema.typeSchema), cardController.addNewCard);
+
+cardRouter.patch("/activation/:id", validateSchema(cardSchema.activationSchema), cardController.activateCard);
 
 export default cardRouter;
