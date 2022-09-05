@@ -10,12 +10,15 @@ export async function newPayment(
     amount: number
 ) {
     const card = await cardRepository.findById(cardId);
+
+    console.log(card);
+
     if (!card) 
         throw { status: 404, message: "Card not found" };
 
     const business = await businessServices.BusinessIsRegistered(businessId);
 
-    if (!cardUtils.comparePasswords(card.password || "", password))
+    if (!cardUtils.comparePasswords(card.password || "", password)) 
         throw { status: 401, message: "Access denied" };
     
     cardUtils.checkCardBlocked(card);

@@ -11,13 +11,14 @@ export async function activateCard(
     securityCode: string
 ) {
     const card = await cardRepository.findById(cardId);
+
     if (!card) 
         throw { status: 404, message: "Card not found" };
 
     if (card.password)
-        throw { status: 403, message: "Card already activated" };  
+        throw { status: 403, message: "Card already activated" }; 
 
-    cardUtils.verifyExpiration(card.expirationDate)
+    cardUtils.verifyExpiration(card.expirationDate);
 
     cardUtils.decryptSecurityCode(cardUtils.encrypter(), card.securityCode, securityCode)
 
@@ -130,7 +131,7 @@ export async function unblockCard(
 
     cardUtils.verifyExpiration(card.expirationDate);
 
-    cardUtils.checkCardBlocked(card);
+    cardUtils.checkCardUnblocked(card);
 
     const cardData = {
         isBlocked: false,

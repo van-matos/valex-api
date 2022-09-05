@@ -28,6 +28,11 @@ export function checkCardBlocked(card: cardRepository.Card) {
         throw { status: 403, message: "Card is blocked" };
 }
 
+export function checkCardUnblocked(card: cardRepository.Card) {
+    if (!card.isBlocked)
+        throw { status: 403, message: "Card is unblocked" };
+}
+
 export async function checkCardBusinessTypes(
     card: cardRepository.Card,
     business: businessRepository.Business
@@ -41,7 +46,7 @@ export async function checkCardBusinessTypes(
     return;
 }
 
-export function comparePasswords(cardPassword: string , password: string) {
+export function comparePasswords(cardPassword: string, password: string) {
     return bcrypt.compareSync(password, cardPassword);
 }
 
