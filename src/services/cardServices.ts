@@ -11,21 +11,17 @@ export async function activateCard(
     securityCode: string
 ) {
     const card = await cardRepository.findById(cardId);
-
     if (!card) 
         throw { status: 404, message: "Card not found" };
 
-    if (cardUtils.verifyExpiration(card.expirationDate)) 
-        throw { status: 403, message: "Card expired" };
-
     if (card.password)
-        throw { status: 403, message: "Card already activated" };
+        throw { status: 403, message: "Card already activated" };  
 
-    if (cardUtils.decryptSecurityCode(cardUtils.encrypter(), card.securityCode) !== securityCode)
-        throw { status: 401, message: "Access denied" };
+    cardUtils.verifyExpiration(card.expirationDate)
 
-    if (!cardUtils.verifyPassword(password))
-        throw { status: 405, message: "Invalid password" };
+    cardUtils.decryptSecurityCode(cardUtils.encrypter(), card.securityCode, securityCode)
+
+    cardUtils.verifyPassword(password)
 
     const encryptedPassword = cardUtils.encryptPassword(password);
 
@@ -43,17 +39,16 @@ export async function createNewCard(
     employeeId: number
 ) {
     const verifyKey = await companyRepository.findByApiKey(APIKey);
-    const verifyCard = await cardRepository.findByTypeAndEmployeeId(cardType, employeeId);
-    const verifyEmployee = await employeeRepository.findById(employeeId);
-
     if (!verifyKey)
         throw { status: 401, message: "Company not registered" };
 
-    if (!verifyEmployee)
-        throw { status: 401, message: "Employee not registered" };
-
+    const verifyCard = await cardRepository.findByTypeAndEmployeeId(cardType, employeeId);
     if (verifyCard)
         throw { status: 405, message: "Employee already has card of this type"};
+    
+    const verifyEmployee = await employeeRepository.findById(employeeId);
+    if (!verifyEmployee)
+        throw { status: 401, message: "Employee not registered" };
 
     const securityCode = cardUtils.generateSecurityCode();
 
@@ -81,8 +76,8 @@ export async function createNewCard(
 
 export async function getCardStatement(cardId: number) {
     const card = await cardRepository.findById(cardId);
-
-    if (!card) throw { status: 404, message: "Card not found" };
+    if (!card) 
+        throw { status: 404, message: "Card not found" };
 
     const recharges = await rechargeRepository.findByCardId(cardId);    
     const transactions = await paymentRepository.findByCardId(cardId);
@@ -98,16 +93,20 @@ export async function getCardStatement(cardId: number) {
     return cardStatement;
 }
 
-export async function blockCard(cardId: number, password: string) {
+export async function blockCard(
+    cardId: number, 
+    password: string
+) {
     const card = await cardRepository.findById(cardId);
+    if (!card) 
+        throw { status: 404, message: "Card not found" };
 
-    if (!card) throw { status: 404, message: "Card not found" };
-
-    if (cardUtils.verifyExpiration(card.expirationDate)) throw { status: 403, message: "Card expired" };
-
-    if (!cardUtils.comparePasswords(card.password || "", password)) throw { status: 401, message: "Access denied" };
+    if (!cardUtils.comparePasswords(card.password || "", password)) 
+        throw { status: 401, message: "Access denied" };
     
-    if (card.isBlocked) throw { status: 403, message: "Card already blocked" };
+    cardUtils.verifyExpiration(card.expirationDate);
+    
+    cardUtils.checkCardBlocked(card);
 
     const cardData = {
         isBlocked: true,
@@ -118,16 +117,20 @@ export async function blockCard(cardId: number, password: string) {
     return;
 }
 
-export async function unblockCard(cardId: number, password: string) {
+export async function unblockCard(
+    cardId: number, 
+    password: string
+) {
     const card = await cardRepository.findById(cardId);
+    if (!card) 
+        throw { status: 404, message: "Card not found" };
 
-    if (!card) throw { status: 404, message: "Card not found" };
+    if (!cardUtils.comparePasswords(card.password || "", password)) 
+        throw { status: 401, message: "Access denied" };
 
-    if (cardUtils.verifyExpiration(card.expirationDate)) throw { status: 403, message: "Card expired" };
+    cardUtils.verifyExpiration(card.expirationDate);
 
-    if (!cardUtils.comparePasswords(card.password || "", password)) throw { status: 401, message: "Access denied" };
-    
-    if (!card.isBlocked) throw { status: 403, message: "Card already unblocked" };
+    cardUtils.checkCardBlocked(card);
 
     const cardData = {
         isBlocked: false,

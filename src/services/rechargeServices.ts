@@ -9,20 +9,16 @@ export async function newRecharge(
     amount: number
 ) {
     const verifyKey = await companyRepository.findByApiKey(APIKey);
-
     if (!verifyKey)
         throw { status: 401, message: "Company not registered" };
 
     const card = await cardRepository.findById(cardId);
-
     if (!card)
         throw { status: 404, message: "Card not found" };
 
-    if (card.isBlocked)
-        throw { status: 403, message: "Card is blocked" };
+    cardUtils.checkCardBlocked(card);
 
-    if (cardUtils.verifyExpiration(card.expirationDate))
-        throw { status: 403, message: "Card expired" };
+    cardUtils.verifyExpiration(card.expirationDate);
 
     const rechargeData = {
         cardId,

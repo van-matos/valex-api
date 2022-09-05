@@ -3,6 +3,9 @@ import Cryptr from "cryptr";
 import dayjs from 'dayjs';
 import { faker } from '@faker-js/faker';
 
+import * as cardRepository from "../repositories/cardRepository";
+import * as businessRepository from "../repositories/businessRepository";
+
 export async function calculateBalance(recharges: any[], payments: any[]) {
     const rechargesTotal = calculateAmount(recharges);
     const paymentsTotal = calculateAmount(payments);
@@ -20,14 +23,33 @@ export async function calculateBalance(recharges: any[], payments: any[]) {
     return rechargesTotal - paymentsTotal;
 }
 
+export function checkCardBlocked(card: cardRepository.Card) {
+    if (card.isBlocked)
+        throw { status: 403, message: "Card is blocked" };
+}
+
+export async function checkCardBusinessTypes(
+    card: cardRepository.Card,
+    business: businessRepository.Business
+) {
+    if (business.type !== card.type) {
+        throw {
+            status: 400,
+            message: "Este estabelecimento não é do mesmo tipo do cartão!",
+        };
+    }
+    return;
+}
+
 export function comparePasswords(cardPassword: string , password: string) {
     return bcrypt.compareSync(password, cardPassword);
 }
 
-export function decryptSecurityCode(cryptr: Cryptr, dbSecurityCode: string) {
-    const decryptedSecrityCode = cryptr.decrypt(dbSecurityCode);
+export function decryptSecurityCode(cryptr: Cryptr, cardSecurityCode: string, securityCode: string) {
+    const decryptedSecrityCode = cryptr.decrypt(cardSecurityCode);
 
-    return decryptedSecrityCode; 
+    if (decryptedSecrityCode !== securityCode)
+        throw { status: 401, message: "Access denied" };   
 }
 
 export function encrypter() {
@@ -79,7 +101,8 @@ export function generateSecurityCode() {
 }
 
 export function verifyExpiration(date: string) {
-    if (dayjs(date).diff(dayjs().format("MM/YY")) < 0) return true;
+    if (dayjs(date).diff(dayjs().format("MM/YY")) < 0)
+        throw { status: 403, message: "Card expired" };
 
     return false;
 }
@@ -87,5 +110,7 @@ export function verifyExpiration(date: string) {
 export function verifyPassword(password: string) {
     const passwordRGX = /^[0-9]{4,6}$/;
 
-    return passwordRGX.test(password);
+    if (!passwordRGX.test(password))
+        throw { status: 405, message: "Invalid password" }; 
+    ;
 }
